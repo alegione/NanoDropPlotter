@@ -50,7 +50,7 @@ server <- function(input, output) {
     nanodat
   })
   
-   output$NanoPlot <- renderPlot({
+  output$NanoPlot <- renderPlot({
       # generate bins based on input$bins from ui.R
       if (is.null(nanoplotdata())) {
         return()
