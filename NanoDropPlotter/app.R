@@ -19,12 +19,15 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE) # ADD MULTIPLE IN FUTURE
+         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE), # ADD MULTIPLE IN FUTURE
+         downloadButton(outputId = "downloadplot", "Save image"),
+         width = 2,
+         NULL
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
-         width = 10, plotOutput("NanoPlot"), downloadButton(outputId = "downloadplot", "Save image")
+         width = 10, plotOutput("NanoPlot")
       )
    )
 )
@@ -55,7 +58,8 @@ server <- function(input, output) {
       if (is.null(nanoplotdata())) {
         return()
       }
-     plotVals <- subset(nanoplotdata(), select = c(Sample.ID, X220:ncol(nanodat)))
+    nanodat <- nanoplotdata()
+     plotVals <- subset(nanodat, select = c(Sample.ID, X220:ncol(nanodat)))
       meltPlot <- melt(plotVals, id=(c("Sample.ID")))
       meltPlot$variable <- substring(meltPlot$variable, 2)
       ggplot(meltPlot) + 
