@@ -83,7 +83,7 @@ server <- function(input, output) {
        paste0('NanoPlot', 'jpeg', sep = ".")
      },
      content <- function(file) {
-       tiff(filename = file,width = 1000, height = 800)
+       tiff(filename = file, width = 1000, height = 800)
        
        plotVals <- subset(nanoplotdata(), select = c(Sample.ID, X220:ncol(nanodat)))
        meltPlot <- melt(plotVals, id=(c("Sample.ID")))
@@ -104,7 +104,7 @@ server <- function(input, output) {
        
        dev.off()
      },
-     contentType = "image/png"
+     contentType = "image/tiff"
    )
        
 }
