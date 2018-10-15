@@ -52,60 +52,67 @@ server <- function(input, output) {
     }
     nanodat
   })
-  
-  output$NanoPlot <- renderPlot(height = 600, {
-      # generate bins based on input$bins from ui.R
-      if (is.null(nanoplotdata())) {
-        return()
-      }
+
+  plotInput = function() {
+    # generate bins based on input$bins from ui.R
+    if (is.null(nanoplotdata())) {
+      return()
+    }
     nanodat <- nanoplotdata()
-     plotVals <- subset(nanodat, select = c(Sample.ID, X220:ncol(nanodat)))
-      meltPlot <- melt(plotVals, id=(c("Sample.ID")))
-      meltPlot$variable <- substring(meltPlot$variable, 2)
-      ggplot(meltPlot) + 
-        theme_bw() + 
-        theme(panel.grid = element_blank()) + 
-        theme(plot.title = element_text(hjust = 0.5)) + 
-        theme(text = element_text(size = 20, colour = "Black")) +
-        theme(axis.text = element_text(size = 15, colour = "Black")) +
-        geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) + 
-        geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
-        geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
-        scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) + 
-        scale_y_continuous(name = "10mm Absorbance") + 
-        labs(colour = "Samples") + 
-        ggtitle(label = "Nanodrop Results") +
-        NULL
+    plotVals <- subset(nanodat, select = c(Sample.ID, X220:ncol(nanodat)))
+    meltPlot <- melt(plotVals, id=(c("Sample.ID")))
+    meltPlot$variable <- substring(meltPlot$variable, 2)
+    ggplot(meltPlot) + 
+      theme_bw() + 
+      theme(panel.grid = element_blank()) + 
+      theme(plot.title = element_text(hjust = 0.5)) + 
+      theme(text = element_text(size = 20, colour = "Black")) +
+      theme(axis.text = element_text(size = 15, colour = "Black")) +
+      geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) + 
+      geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
+      geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
+      scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) + 
+      scale_y_continuous(name = "10mm Absorbance") + 
+      labs(colour = "Samples") + 
+      ggtitle(label = "Nanodrop Results") +
+      NULL
+  }
+  
+    
+  output$NanoPlot <- renderPlot(height = 600, {
+    plotInput()
    })
-   # https://stackoverflow.com/questions/40666542/shiny-download-table-data-and-plot?rq=1
+
+     # https://stackoverflow.com/questions/40666542/shiny-download-table-data-and-plot?rq=1
    output$downloadplot <- downloadHandler(
-     filename <- function() {
-       paste0('NanoPlot', 'jpeg', sep = ".")
-     },
-     content <- function(file) {
-       tiff(filename = file,width = 1000, height = 800)
+     filename = function() { paste0('NanoPlot', '.png', sep = "") },
+     content = function(file) {
+       ggsave(file, plot = plotInput(), device = "png")
+     }
        
-       plotVals <- subset(nanoplotdata(), select = c(Sample.ID, X220:ncol(nanodat)))
-       meltPlot <- melt(plotVals, id=(c("Sample.ID")))
-       meltPlot$variable <- substring(meltPlot$variable, 2)
-       ImageSave <- ggplot(meltPlot) + 
-         theme_bw() + 
-         theme(panel.grid = element_blank()) + 
-         theme(plot.title = element_text(hjust = 0.5)) + 
-         geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) + 
-         geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
-         geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
-         scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) + 
-         scale_y_continuous(name = "10mm Absorbance") + 
-         labs(colour = "Samples") + 
-         ggtitle(label = "Nanodrop Results") +
-         NULL
-       print(ImageSave)
        
-       dev.off()
-     },
-     contentType = "image/png"
-   )
+
+       # tiff(filename = file, width = 1000, height = 800)
+       # 
+       # plotVals <- subset(nanoplotdata(), select = c(Sample.ID, X220:ncol(nanodat)))
+       # meltPlot <- melt(plotVals, id=(c("Sample.ID")))
+       # meltPlot$variable <- substring(meltPlot$variable, 2)
+       # ImageSave <- ggplot(meltPlot) + 
+       #   theme_bw() + 
+       #   theme(panel.grid = element_blank()) + 
+       #   theme(plot.title = element_text(hjust = 0.5)) + 
+       #   geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) + 
+       #   geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
+       #   geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
+       #   scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) + 
+       #   scale_y_continuous(name = "10mm Absorbance") + 
+       #   labs(colour = "Samples") + 
+       #   ggtitle(label = "Nanodrop Results") +
+       #   NULL
+       # print(ImageSave)
+       # 
+       # dev.off()
+  )
        
 }
 
