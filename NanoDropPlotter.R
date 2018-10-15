@@ -31,6 +31,8 @@ ggplot(meltPlot) +
   theme_bw() + 
   theme(panel.grid = element_blank()) + 
   theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(text = element_text(size = 17, colour = "Black")) +
+  theme(axis.text = element_text(size = 12, colour = "Black")) +
   geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) + 
   geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
   geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
