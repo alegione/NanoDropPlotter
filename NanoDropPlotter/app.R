@@ -20,6 +20,7 @@ ui <- fluidPage(
       sidebarPanel(
          fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE), # ADD MULTIPLE IN FUTURE
          downloadButton(outputId = "downloadplot", "Save image"),
+         downloadButton(outputId = "downloadtable", "Save table"),
          width = 2,
          NULL
       ),
@@ -70,7 +71,7 @@ server <- function(input, output) {
     nanodat
   })
 
-  plotInput = function() {
+  plotInput <- function() {
     if (is.null(nanoplotdata())) {
       return()
     }
@@ -105,10 +106,30 @@ server <- function(input, output) {
        ggsave(filename = file, plot = plotInput(), device = "tiff", width = 210, height =  148, units = "mm", dpi = 320)
      }
   )
-   
-  output$NanoTable <- renderTable({
-    nanoplotdata()[1:12]
+  
+  Generate_nanoTable <- reactive({
+    if (is.null(nanoplotdata())) {
+      return()
+    }
+    (returnTable <- tbl_df(nanoplotdata()) %>%
+      select("Sample.ID", "Date", "Time", "ng.ul", "Cursor.abs.", "A260", "A280", "X260.280", "X260.230") %>%
+      rename(c("Sample.ID" = "Sample", "ng.ul" = "ng/uL", "Cursor.abs." = "A230", "X260.280" = "260/280", "X260.230" = "260/230"))
+    )
+    
   })
+  
+  
+  output$NanoTable <- renderTable({
+    Generate_nanoTable()
+  })
+  
+  output$downloadtable <- downloadHandler(
+    filename = function() { paste0('NanoTable', '.tsv', sep = "") },
+    content = function(file) {
+      write.table(x = Generate_nanoTable(), file = file, row.names = FALSE, sep = "\t")
+    },
+    contentType = "text/csv"
+  )
 
 }
 
