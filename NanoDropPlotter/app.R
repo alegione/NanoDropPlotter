@@ -12,11 +12,10 @@ library(reshape)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-   
+   remove(input, tmp, nanodat,meltPlot,plotVals),
    # Application title
    titlePanel("Nanodrop Plotter"),
    
-   # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
          fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE), # ADD MULTIPLE IN FUTURE
@@ -27,13 +26,31 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(
-         width = 8, plotOutput("NanoPlot")
-      )
+         verticalLayout(
+           plotOutput(outputId = "NanoPlot")
+         ),
+         verticalLayout(
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           tableOutput(outputId = "NanoTable")
+         )
+   )
    )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+
   nanoplotdata <- reactive({
     inFile <- input$fileLoad
     if (is.null(inFile)) {
@@ -54,7 +71,6 @@ server <- function(input, output) {
   })
 
   plotInput = function() {
-    # generate bins based on input$bins from ui.R
     if (is.null(nanoplotdata())) {
       return()
     }
@@ -82,14 +98,17 @@ server <- function(input, output) {
   output$NanoPlot <- renderPlot(height = 600, {
     plotInput()
    })
-
-     # https://stackoverflow.com/questions/40666542/shiny-download-table-data-and-plot?rq=1
-   output$downloadplot <- downloadHandler(
-     filename = function() { paste0('NanoPlot', '.png', sep = "") },
+  
+  output$downloadplot <- downloadHandler(
+     filename = function() { paste0('NanoPlot', '.tiff', sep = "") },
      content = function(file) {
-       ggsave(file, plot = plotInput(), device = "png")
+       ggsave(filename = file, plot = plotInput(), device = "tiff", width = 210, height =  148, units = "mm", dpi = 320)
      }
-   )
+  )
+   
+  output$NanoTable <- renderTable({
+    nanoplotdata()[1:12]
+  })
 
 }
 
