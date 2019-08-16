@@ -150,7 +150,7 @@ server <- function(input, output) {
   output$exportPDF <- downloadHandler(
     filename = function() { paste0(input$PlotTitle, '.pdf', sep = "") },
     content = function(file) {
-      pdf(file = file, onefile = TRUE, paper = "a4", width = 8)
+      pdf(file = file, onefile = TRUE, paper = "a4", width = 8, height = 11)
       grid.arrange(plotInput(), tableGrob(Generate_nanoTable()))
       dev.off()
 
