@@ -10,6 +10,13 @@ The tool currently offers to ability to save:
 Shiny tool beta:
 https://alegione.shinyapps.io/NanoDropPlotter/
 
+Example:
+
+![Example of NanoDropPlotter output](https://github.com/alegione/NanoDropPlotter/blob/master/NanoDropPlotter/images/ExampleRun.jpeg)
+
+
+
+
 Current issues:
 - Samples need to have unique names
 - Sample order in plot and table differ (plot is alphabetical)
