@@ -5,8 +5,8 @@ account: alegione
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 514648
-bundleId: 1643749
+bundleId: 1681009
 url: https://alegione.shinyapps.io/NanoDropPlotter/
-when: 1539613231.00618
+when: 1541338789.83854
 asMultiple: FALSE
 asStatic: FALSE
