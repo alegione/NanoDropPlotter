@@ -18,7 +18,7 @@ ui <- fluidPage(
    
    sidebarLayout(
       sidebarPanel(
-         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE), # ADD MULTIPLE IN FUTURE
+         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE),
          downloadButton(outputId = "downloadplot", "Save image"),
          downloadButton(outputId = "downloadtable", "Save table"),
          width = 2,
@@ -68,6 +68,7 @@ server <- function(input, output) {
         nanodat <- bind_rows(nanodat,tmp)
       }
     }
+    nanodat <- cbind(id=(1:nrow(nanodat)), nanodat)
     nanodat
   })
 
