@@ -12,7 +12,7 @@ https://alegione.shinyapps.io/NanoDropPlotter/
 
 Example:
 
-![Example of NanoDropPlotter output](https://github.com/alegione/NanoDropPlotter/blob/master/NanoDropPlotter/images/ExampleRun.jpeg)
+<kbd><img src="https://github.com/alegione/NanoDropPlotter/blob/master/NanoDropPlotter/images/ExampleRun.jpeg" /></kbd>
 
 
 
