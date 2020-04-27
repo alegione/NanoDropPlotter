@@ -5,8 +5,14 @@ account: alegione
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 514648
+<<<<<<< HEAD
 bundleId: 1678488
 url: https://alegione.shinyapps.io/NanoDropPlotter/
 when: 1541171447.0062
+=======
+bundleId: 2326231
+url: https://alegione.shinyapps.io/NanoDropPlotter/
+when: 1565967403.60856
+>>>>>>> e7538a5a72ba84521bd082f155ab5ee5a09ec3fc
 asMultiple: FALSE
 asStatic: FALSE
