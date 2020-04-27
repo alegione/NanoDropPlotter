@@ -9,31 +9,54 @@
 
 library(tidyverse)
 library(reshape)
+library(gridExtra)
 
-# Define UI for application that draws a histogram
+# Define UI for application
 ui <- fluidPage(
-   
+   remove(input, tmp, nanodat,meltPlot,plotVals),
    # Application title
    titlePanel("Nanodrop Plotter"),
    
-   # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE), # ADD MULTIPLE IN FUTURE
+         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE),
+         textInput(inputId = "PlotTitle", label = "Title:", value = "Nanodrop Plot"), 
          downloadButton(outputId = "downloadplot", "Save image"),
+         downloadButton(outputId = "downloadtable", "Save table"),
+         downloadButton(outputId = "exportPDF", "Save PDF"),
          width = 2,
          NULL
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
-         width = 8, plotOutput("NanoPlot")
-      )
+         verticalLayout(
+           plotOutput(outputId = "NanoPlot")
+         ),
+         verticalLayout(
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           br(),
+           tableOutput(outputId = "NanoTable")
+         )
+   )
    )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+
+  
+  
   nanoplotdata <- reactive({
     inFile <- input$fileLoad
     if (is.null(inFile)) {
@@ -50,11 +73,11 @@ server <- function(input, output) {
         nanodat <- bind_rows(nanodat,tmp)
       }
     }
+    nanodat <- cbind(id=(1:nrow(nanodat)), nanodat)
     nanodat
   })
 
-  plotInput = function() {
-    # generate bins based on input$bins from ui.R
+  plotInput <- function() {
     if (is.null(nanoplotdata())) {
       return()
     }
@@ -74,7 +97,7 @@ server <- function(input, output) {
       scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) + 
       scale_y_continuous(name = "10mm Absorbance") + 
       labs(colour = "Samples") + 
-      ggtitle(label = "Nanodrop Results") +
+      ggtitle(label = input$PlotTitle) +
       NULL
   }
   
@@ -82,15 +105,58 @@ server <- function(input, output) {
   output$NanoPlot <- renderPlot(height = 600, {
     plotInput()
    })
-
-     # https://stackoverflow.com/questions/40666542/shiny-download-table-data-and-plot?rq=1
-   output$downloadplot <- downloadHandler(
-     filename = function() { paste0('NanoPlot', '.png', sep = "") },
+  
+  output$downloadplot <- downloadHandler(
+     filename = function() { paste0(input$PlotTitle, '.tiff', sep = "") },
      content = function(file) {
-       ggsave(file, plot = plotInput(), device = "png")
+       ggsave(filename = file, plot = plotInput(), device = "tiff", width = 210, height =  148, units = "mm", dpi = 320)
      }
-   )
+  )
+  
+  Generate_nanoTable <- reactive({
+    if (is.null(nanoplotdata())) {
+      return()
+    }
+    (returnTable <- tbl_df(nanoplotdata()) %>%
+      select("Sample.ID", "Date", "Time", "ng.ul", "Cursor.abs.", "A260", "A280", "X260.280", "X260.230") %>%
+      rename(c("Sample.ID" = "Sample", "ng.ul" = "ng/uL", "Cursor.abs." = "A230", "X260.280" = "260/280", "X260.230" = "260/230"))
+    )
+    
+  })
+  
+  
+  output$NanoTable <- renderTable({
+    Generate_nanoTable()
+  })
+  
+  output$downloadtable <- downloadHandler(
+    filename = function() { paste0(input$PlotTitle, '.tsv', sep = "") },
+    content = function(file) {
+      write.table(x = Generate_nanoTable(), file = file, row.names = FALSE, sep = "\t")
+    },
+    contentType = "text/csv"
+  )
 
+  # output$exportPDF <- downloadHandler(
+  #   filename = function() { paste0(input$PlotTitle, '.pdf', sep = "") },
+  #   content = function(file) {
+  #     pdf(file = file, onefile = TRUE, paper = "a4r", width = 10)
+  #     grid.arrange(plotInput(), tableGrob(Generate_nanoTable()))
+  #     dev.off()
+  #   
+  #   },
+  #   contentType = "application/pdf"
+  # )
+  output$exportPDF <- downloadHandler(
+    filename = function() { paste0(input$PlotTitle, '.pdf', sep = "") },
+    content = function(file) {
+      pdf(file = file, onefile = TRUE, paper = "a4", width = 8, height = 11)
+      grid.arrange(plotInput(), tableGrob(Generate_nanoTable()))
+      dev.off()
+
+    },
+    contentType = "application/pdf"
+  )
 }
 
 # Run the application 
