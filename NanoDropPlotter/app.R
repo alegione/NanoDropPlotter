@@ -11,10 +11,12 @@ library(tidyverse)
 library(reshape)
 library(gridExtra)
 library(shiny)
+library(DT)
 
 # Define UI for application
 ui <- fluidPage(
-   remove(input, tmp, nanodat,meltPlot,plotVals),
+  rm(list = ls()),
+  #remove(input, tmp, nanodat,meltPlot,plotVals),
    # Application title
    titlePanel("Nanodrop Plotter"),
    
@@ -22,9 +24,9 @@ ui <- fluidPage(
       sidebarPanel(
          fileInput(inputId = "fileLoad", label = "Load ndv file", accept = c(".ndv", ".tsv", ".csv"), multiple = TRUE),
          textInput(inputId = "PlotTitle", label = "Title:", value = "Nanodrop Plot"), 
-         downloadButton(outputId = "downloadplot", "Save image"),
-         downloadButton(outputId = "downloadtable", "Save table"),
-         downloadButton(outputId = "exportPDF", "Save PDF"),
+         downloadButton(outputId = "downloadplot", "Save Image"),
+         # downloadButton(outputId = "downloadtable", "Save table"),
+         downloadButton(outputId = "exportPDF", "Save Page"),
          width = 2,
          NULL
       ),
@@ -47,7 +49,7 @@ ui <- fluidPage(
            br(),
            br(),
            br(),
-           tableOutput(outputId = "NanoTable")
+           dataTableOutput(outputId = "NanoTable")
          )
    )
    )
@@ -55,15 +57,13 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-  
-  
   nanoplotdata <- reactive({
     inFile <- input$fileLoad
     if (is.null(inFile)) {
       return(NULL)
     } else {
       numfiles = nrow(inFile)
+      updateTextInput(inputId = "PlotTitle", value = tools::file_path_sans_ext(input$fileLoad$name))
     }
     
     for (i in 1:numfiles) {
@@ -77,35 +77,62 @@ server <- function(input, output) {
     nanodat <- cbind(id=(1:nrow(nanodat)), nanodat)
     nanodat
   })
-
-  plotInput <- function() {
-    if (is.null(nanoplotdata())) {
+  
+  plotInput <- function(nanodat) {
+    if (nrow(nanodat) == 0) {
+      ggplot() +
+        geom_blank() + 
+        theme_bw() +
+        theme(panel.grid = element_blank()) +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        theme(text = element_text(size = 20, colour = "Black")) +
+        theme(axis.text = element_text(size = 15, colour = "Black")) +
+        geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
+        geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
+        scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) +
+        scale_y_continuous(name = "10mm Absorbance") +
+        labs(colour = "Samples") +
+        ggtitle(label = input$PlotTitle) +
       return()
     }
-    nanodat <- nanoplotdata()
-    plotVals <- subset(nanodat, select = c(Sample.ID, X220:ncol(nanodat)))
-    meltPlot <- melt(plotVals, id=(c("Sample.ID")))
+    nanodat <- subset(nanodat, select = c(Sample.ID, X220:ncol(nanodat)))
+    meltPlot <- melt(nanodat, id=(c("Sample.ID")))
     meltPlot$variable <- substring(meltPlot$variable, 2)
-    ggplot(meltPlot) + 
-      theme_bw() + 
-      theme(panel.grid = element_blank()) + 
-      theme(plot.title = element_text(hjust = 0.5)) + 
+    ggplot(meltPlot) +
+      theme_bw() +
+      theme(panel.grid = element_blank()) +
+      theme(plot.title = element_text(hjust = 0.5)) +
       theme(text = element_text(size = 20, colour = "Black")) +
       theme(axis.text = element_text(size = 15, colour = "Black")) +
-      geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) + 
+      geom_line(aes(x = as.numeric(variable), y = value, group = Sample.ID, colour = Sample.ID), size = 2) +
       geom_vline(xintercept = c(230,260,280), colour = "Black", linetype = "dotted") +
       geom_hline(yintercept = 0, colour = "Black", linetype = "dotted") +
-      scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) + 
-      scale_y_continuous(name = "10mm Absorbance") + 
-      labs(colour = "Samples") + 
+      scale_x_continuous(name = "Wavelength (nm)", breaks = c(230, 260, 280),labels = c("230", "260", "280"), limits = c(220, 350), expand = c(0, 0)) +
+      scale_y_continuous(name = "10mm Absorbance") +
+      labs(colour = "Samples") +
       ggtitle(label = input$PlotTitle) +
       NULL
   }
   
     
-  output$NanoPlot <- renderPlot(height = 600, {
-    plotInput()
-   })
+  # output$NanoPlot <- renderPlot(height = 600, {
+  #   plotInput()
+  #  })
+  
+  observe({
+    #req(input$NanoTable_rows_selected)
+    if(is.null(input$NanoTable_rows_selected)) {
+      plotdata <- nanoplotdata()
+    } else {
+      plotdata <- nanoplotdata()
+      plotdata <- plotdata[input$NanoTable_rows_selected, ]
+    }
+    
+    output$NanoPlot <- renderPlot(height = 600, {
+      print("I've made it this far")
+        plotInput(plotdata)
+       })
+  })
   
   output$downloadplot <- downloadHandler(
      filename = function() { paste0(input$PlotTitle, '.tiff', sep = "") },
@@ -120,23 +147,35 @@ server <- function(input, output) {
     }
     (returnTable <- tbl_df(nanoplotdata()) %>%
       select("Sample.ID", "Date", "Time", "ng.ul", "Cursor.abs.", "A260", "A280", "X260.280", "X260.230") %>%
-      rename(c("Sample.ID" = "Sample", "ng.ul" = "ng/uL", "Cursor.abs." = "A230", "X260.280" = "260/280", "X260.230" = "260/230"))
-    )
-    
-  })
+      rename(c("Sample.ID" = "Sample", "ng.ul" = "ng/uL", "Cursor.abs." = "A230", "X260.280" = "260/280", "X260.230" = "260/230")) %>%
+        datatable(extensions = 'Buttons',
+                  selection = list(mode = 'multiple', target = 'row') ,
+                  options = list(dom = "Blfrtip",
+                                 buttons = list("copy",
+                                                list(extend = "collection",
+                                                     buttons = c("csv", "excel", "pdf"),
+                                                     text = "Download")), # end of buttons customization
+                                 # customize the length menu
+                                 lengthMenu = list(c(10, 20, -1), # declare values
+                                                   c("10", "20", "All") # declare titles
+                                                    ), # end of lengthMenu customization
+                                 pageLength = 12) # end of options
+                  ) # end of datatables
+      )
+    })
   
   
-  output$NanoTable <- renderTable({
+  output$NanoTable <- renderDT({
     Generate_nanoTable()
   })
   
-  output$downloadtable <- downloadHandler(
-    filename = function() { paste0(input$PlotTitle, '.tsv', sep = "") },
-    content = function(file) {
-      write.table(x = Generate_nanoTable(), file = file, row.names = FALSE, sep = "\t")
-    },
-    contentType = "text/csv"
-  )
+  # output$downloadtable <- downloadHandler(
+  #   filename = function() { paste0(input$PlotTitle, '.tsv', sep = "") },
+  #   content = function(file) {
+  #     write.table(x = Generate_nanoTable(), file = file, row.names = FALSE, sep = "\t")
+  #   },
+  #   contentType = "text/csv"
+  # )
 
   # output$exportPDF <- downloadHandler(
   #   filename = function() { paste0(input$PlotTitle, '.pdf', sep = "") },
