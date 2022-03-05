@@ -6,6 +6,8 @@
 ### Load packages
 library("tidyverse")
 library("reshape")
+library("dbplyr")
+library("RSQLite")
 
 ### Load data
 input <- "AL_AD_cDNA_StrandSynth.ndv"
@@ -42,3 +44,7 @@ ggplot(meltPlot) +
   ggtitle(label = "Nanodrop Results") +
   NULL
 
+my_db_file <- "dsDNA 21_04_2021 17_32_59.sql"
+my_db <- src_sqlite(my_db_file, create = TRUE)
+dbFetch(my_db_file)
+  

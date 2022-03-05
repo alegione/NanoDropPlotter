@@ -10,6 +10,7 @@
 library(tidyverse)
 library(reshape)
 library(gridExtra)
+library(shiny)
 
 # Define UI for application
 ui <- fluidPage(
@@ -19,7 +20,7 @@ ui <- fluidPage(
    
    sidebarLayout(
       sidebarPanel(
-         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = ".ndv", multiple = TRUE),
+         fileInput(inputId = "fileLoad", label = "Load ndv file", accept = c(".ndv", ".tsv", ".csv"), multiple = TRUE),
          textInput(inputId = "PlotTitle", label = "Title:", value = "Nanodrop Plot"), 
          downloadButton(outputId = "downloadplot", "Save image"),
          downloadButton(outputId = "downloadtable", "Save table"),
