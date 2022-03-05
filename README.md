@@ -4,6 +4,7 @@ Just save the report file from your nanodrop (.ndv), and you can import multiple
 
 The tool currently offers to ability to:
   - Merge multiple Nanodrop files together
+  - Select individual samples to display
   - Save the resulting plot as a tiff image
   - Save the combined results table as a tab-delimited file
   - Save an A4 size PDF containing both plot and table together
